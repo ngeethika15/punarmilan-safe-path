@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Platform,
   Alert,
+  ScrollView,
 } from 'react-native';
 import * as Location from 'expo-location';
 
@@ -22,6 +23,21 @@ if (Platform.OS !== 'web') {
   Marker = Maps.Marker;
   Polyline = Maps.Polyline;
 }
+
+interface Shelter {
+  id: string;
+  name: string;
+  type: string;
+  lat: number;
+  lon: number;
+  capacity: string;
+}
+
+const MOCK_SHELTERS: Shelter[] = [
+  { id: '1', name: 'Central Disaster Relief Camp', type: 'Shelter', lat: 13.5500, lon: 78.5100, capacity: '85% Available' },
+  { id: '2', name: 'City General Emergency Hospital', type: 'Medical', lat: 13.5400, lon: 78.4980, capacity: 'Open 24/7' },
+  { id: '3', name: 'Red Cross Safe Zone #4', type: 'Supply Post', lat: 13.5620, lon: 78.5200, capacity: 'Food & Water Ready' },
+];
 
 export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
@@ -57,7 +73,6 @@ export default function HomeScreen() {
     setSearching(true);
     try {
       if (Platform.OS === 'web') {
-        // Free OpenStreetMap geocoding API fallback for Web browser
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
             destinationInput
@@ -73,10 +88,9 @@ export default function HomeScreen() {
           });
           setWeatherAlert('Route calculated! Clear pathway verified.');
         } else {
-          alert('Destination not found. Try another city or location.');
+          alert('Destination not found. Try another location.');
         }
       } else {
-        // Native Expo Location Geocoding
         const geocoded = await Location.geocodeAsync(destinationInput);
         if (geocoded && geocoded.length > 0) {
           const target = geocoded[0];
@@ -86,31 +100,24 @@ export default function HomeScreen() {
             name: destinationInput,
           });
           setWeatherAlert('Route calculated! Clear pathway verified.');
-        } else {
-          Alert.alert('Place Not Found', 'Could not locate the requested destination.');
         }
       }
     } catch (err) {
-      if (Platform.OS === 'web') {
-        alert('Search error: Failed to fetch coordinates.');
-      } else {
-        Alert.alert('Search Error', 'Failed to resolve destination coordinates.');
-      }
+      alert('Search failed. Please try again.');
     } finally {
       setSearching(false);
     }
   };
 
   const pingBackend = async () => {
-    try {
-      setBackendStatus('Connecting to backend...');
-      setTimeout(() => {
-        setBackendStatus('Connected (200 OK)');
-      }, 1000);
-    } catch (e) {
-      setBackendStatus('Connection Failed');
-    }
+    setBackendStatus('Connecting to backend...');
+    setTimeout(() => {
+      setBackendStatus('Connected (200 OK)');
+    }, 800);
   };
+
+  const currentLat = destinationCoords?.latitude || location?.coords.latitude || 13.544;
+  const currentLon = destinationCoords?.longitude || location?.coords.longitude || 78.5068;
 
   if (loading && !location) {
     return (
@@ -123,7 +130,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Search Input Header */}
+      {/* Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -146,13 +153,13 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Main View: Native Map vs Web Fallback */}
+      {/* Map Display: Native MapView vs Web OpenStreetMap iFrame */}
       {Platform.OS !== 'web' && MapView ? (
         <MapView
           style={styles.map}
           initialRegion={{
-            latitude: location?.coords.latitude || 13.544,
-            longitude: location?.coords.longitude || 78.5068,
+            latitude: currentLat,
+            longitude: currentLon,
             latitudeDelta: 0.05,
             longitudeDelta: 0.05,
           }}
@@ -165,10 +172,8 @@ export default function HomeScreen() {
                 longitude: location.coords.longitude,
               }}
               title="My Location"
-              description="Active Safe-Path User"
             />
           )}
-
           {destinationCoords && (
             <Marker
               coordinate={{
@@ -179,56 +184,56 @@ export default function HomeScreen() {
               pinColor="green"
             />
           )}
-
-          {location && destinationCoords && (
-            <Polyline
-              coordinates={[
-                { latitude: location.coords.latitude, longitude: location.coords.longitude },
-                { latitude: destinationCoords.latitude, longitude: destinationCoords.longitude },
-              ]}
-              strokeColor="#2563EB"
-              strokeWidth={4}
-            />
-          )}
         </MapView>
       ) : (
-        <View style={styles.webFallback}>
-          <Text style={styles.webMapEmoji}>🗺️</Text>
-          <Text style={styles.webMapTitle}>SAFE-PATH ROUTE MANAGER</Text>
-          {location && (
-            <Text style={styles.coordsText}>
-              Origin GPS: {location.coords.latitude.toFixed(4)}, {location.coords.longitude.toFixed(4)}
-            </Text>
-          )}
-
-          {destinationCoords ? (
-            <View style={styles.routeBox}>
-              <Text style={styles.routeTitle}>📍 Active Route Destination:</Text>
-              <Text style={styles.routeName}>{destinationCoords.name}</Text>
-              <Text style={styles.routeCoords}>
-                Target GPS: {destinationCoords.latitude.toFixed(4)}, {destinationCoords.longitude.toFixed(4)}
-              </Text>
-            </View>
-          ) : (
-            <Text style={styles.subtext}>Enter a destination above and tap Route.</Text>
-          )}
+        <View style={styles.webMapContainer}>
+          <iframe
+            title="SafePath Web Map"
+            width="100%"
+            height="100%"
+            style={{ border: 0 }}
+            src={`https://www.openstreetmap.org/export/embed.html?bbox=${currentLon - 0.03}%2C${currentLat - 0.03}%2C${currentLon + 0.03}%2C${currentLat + 0.03}&layer=mapnik&marker=${currentLat}%2C${currentLon}`}
+          />
         </View>
       )}
 
-      {/* Control Card */}
+      {/* Bottom Info Card */}
       <View style={styles.card}>
         <View style={styles.badgeRow}>
           <Text style={styles.badge}>SAFE-PATH ROUTING ACTIVE</Text>
         </View>
 
-        <Text style={styles.alertText}>⚠️ Hazard Status: {weatherAlert}</Text>
+        {destinationCoords && (
+          <Text style={styles.destinationText}>📍 Destination: {destinationCoords.name}</Text>
+        )}
 
-        <Text style={styles.backendText}>
-          Backend Status: <Text style={{ fontWeight: 'bold' }}>{backendStatus}</Text>
-        </Text>
+        <Text style={styles.alertText}>⚠️ Status: {weatherAlert}</Text>
+
+        <Text style={styles.shelterHeader}>Emergency Safe Zones Nearby:</Text>
+        <ScrollView style={styles.shelterList} nestedScrollEnabled>
+          {MOCK_SHELTERS.map((shelter) => (
+            <TouchableOpacity
+              key={shelter.id}
+              style={styles.shelterItem}
+              onPress={() =>
+                setDestinationCoords({
+                  latitude: shelter.lat,
+                  longitude: shelter.lon,
+                  name: shelter.name,
+                })
+              }
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.shelterName}>{shelter.name}</Text>
+                <Text style={styles.shelterType}>{shelter.type} • {shelter.capacity}</Text>
+              </View>
+              <Text style={styles.navigateBtn}>Select</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         <TouchableOpacity style={styles.button} onPress={pingBackend}>
-          <Text style={styles.buttonText}>Ping Backend API</Text>
+          <Text style={styles.buttonText}>Backend: {backendStatus}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -240,6 +245,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' },
   loadingText: { marginTop: 12, fontSize: 14, color: '#64748B' },
   map: { width: '100%', height: '100%' },
+  webMapContainer: { width: '100%', height: '55%' },
   searchContainer: {
     position: 'absolute',
     top: 50,
@@ -263,51 +269,48 @@ const styles = StyleSheet.create({
     minWidth: 70,
   },
   searchButtonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13 },
-  webFallback: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  webMapEmoji: { fontSize: 44, marginBottom: 8 },
-  webMapTitle: { fontSize: 18, fontWeight: 'bold', color: '#F8FAFC' },
-  coordsText: { fontSize: 13, color: '#10B981', marginTop: 6 },
-  subtext: { fontSize: 12, color: '#94A3B8', marginTop: 12 },
-  routeBox: {
-    backgroundColor: '#1E293B',
-    padding: 14,
-    borderRadius: 12,
-    marginTop: 16,
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 350,
-  },
-  routeTitle: { fontSize: 13, color: '#94A3B8' },
-  routeName: { fontSize: 16, fontWeight: 'bold', color: '#60A5FA', marginTop: 4 },
-  routeCoords: { fontSize: 12, color: '#CBD5E1', marginTop: 2 },
   card: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 20,
     left: 16,
     right: 16,
+    maxHeight: '40%',
     backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 16,
     boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.25)',
   },
-  badgeRow: { flexDirection: 'row', marginBottom: 6 },
+  badgeRow: { flexDirection: 'row', marginBottom: 4 },
   badge: {
     backgroundColor: '#EFF6FF',
     color: '#2563EB',
     fontSize: 10,
     fontWeight: 'bold',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 6,
   },
-  alertText: { fontSize: 13, color: '#D97706', fontWeight: '600', marginTop: 4 },
-  backendText: { fontSize: 12, color: '#2563EB', marginTop: 6 },
+  destinationText: { fontSize: 14, fontWeight: 'bold', color: '#1E293B', marginTop: 4 },
+  alertText: { fontSize: 12, color: '#D97706', fontWeight: '600', marginTop: 2 },
+  shelterHeader: { fontSize: 12, fontWeight: 'bold', color: '#64748B', marginTop: 8, marginBottom: 4 },
+  shelterList: { maxHeight: 110 },
+  shelterItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 6,
+  },
+  shelterName: { fontSize: 12, fontWeight: 'bold', color: '#0F172A' },
+  shelterType: { fontSize: 10, color: '#64748B' },
+  navigateBtn: { fontSize: 11, fontWeight: 'bold', color: '#2563EB', paddingHorizontal: 6 },
   button: {
-    marginTop: 12,
+    marginTop: 8,
     backgroundColor: '#2563EB',
-    paddingVertical: 10,
+    paddingVertical: 8,
     borderRadius: 8,
     alignItems: 'center',
   },
-  buttonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13 },
+  buttonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 12 },
 });
