@@ -32,6 +32,7 @@ export default function HomeScreen() {
     name: string;
   } | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [searching, setSearching] = useState<boolean>(false);
   const [weatherAlert, setWeatherAlert] = useState<string>('Clear weather on route');
   const [backendStatus, setBackendStatus] = useState<string>('Not connected');
 
@@ -53,32 +54,56 @@ export default function HomeScreen() {
   const handleSearchDestination = async () => {
     if (!destinationInput.trim()) return;
 
+    setSearching(true);
     try {
-      setLoading(true);
-      const geocoded = await Location.geocodeAsync(destinationInput);
+      if (Platform.OS === 'web') {
+        // Free OpenStreetMap geocoding API fallback for Web browser
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            destinationInput
+          )}`
+        );
+        const data = await res.json();
 
-      if (geocoded && geocoded.length > 0) {
-        const target = geocoded[0];
-        setDestinationCoords({
-          latitude: target.latitude,
-          longitude: target.longitude,
-          name: destinationInput,
-        });
-        setWeatherAlert('Route calculated! Clear pathway verified.');
+        if (data && data.length > 0) {
+          setDestinationCoords({
+            latitude: parseFloat(data[0].lat),
+            longitude: parseFloat(data[0].lon),
+            name: data[0].display_name.split(',')[0],
+          });
+          setWeatherAlert('Route calculated! Clear pathway verified.');
+        } else {
+          alert('Destination not found. Try another city or location.');
+        }
       } else {
-        Alert.alert('Place Not Found', 'Could not locate the requested destination.');
+        // Native Expo Location Geocoding
+        const geocoded = await Location.geocodeAsync(destinationInput);
+        if (geocoded && geocoded.length > 0) {
+          const target = geocoded[0];
+          setDestinationCoords({
+            latitude: target.latitude,
+            longitude: target.longitude,
+            name: destinationInput,
+          });
+          setWeatherAlert('Route calculated! Clear pathway verified.');
+        } else {
+          Alert.alert('Place Not Found', 'Could not locate the requested destination.');
+        }
       }
     } catch (err) {
-      Alert.alert('Search Error', 'Failed to resolve destination coordinates.');
+      if (Platform.OS === 'web') {
+        alert('Search error: Failed to fetch coordinates.');
+      } else {
+        Alert.alert('Search Error', 'Failed to resolve destination coordinates.');
+      }
     } finally {
-      setLoading(false);
+      setSearching(false);
     }
   };
 
   const pingBackend = async () => {
     try {
       setBackendStatus('Connecting to backend...');
-      // Target local API endpoint or mock success
       setTimeout(() => {
         setBackendStatus('Connected (200 OK)');
       }, 1000);
@@ -98,7 +123,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Top Search Bar */}
+      {/* Search Input Header */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -106,13 +131,22 @@ export default function HomeScreen() {
           placeholderTextColor="#94A3B8"
           value={destinationInput}
           onChangeText={setDestinationInput}
+          onSubmitEditing={handleSearchDestination}
         />
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearchDestination}>
-          <Text style={styles.searchButtonText}>Route</Text>
+        <TouchableOpacity
+          style={styles.searchButton}
+          onPress={handleSearchDestination}
+          disabled={searching}
+        >
+          {searching ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.searchButtonText}>Route</Text>
+          )}
         </TouchableOpacity>
       </View>
 
-      {/* Main View: Native Map or Web Dashboard */}
+      {/* Main View: Native Map vs Web Fallback */}
       {Platform.OS !== 'web' && MapView ? (
         <MapView
           style={styles.map}
@@ -172,16 +206,16 @@ export default function HomeScreen() {
               <Text style={styles.routeTitle}>📍 Active Route Destination:</Text>
               <Text style={styles.routeName}>{destinationCoords.name}</Text>
               <Text style={styles.routeCoords}>
-                Target: {destinationCoords.latitude.toFixed(4)}, {destinationCoords.longitude.toFixed(4)}
+                Target GPS: {destinationCoords.latitude.toFixed(4)}, {destinationCoords.longitude.toFixed(4)}
               </Text>
             </View>
           ) : (
-            <Text style={styles.subtext}>Enter a destination above to calculate safe route.</Text>
+            <Text style={styles.subtext}>Enter a destination above and tap Route.</Text>
           )}
         </View>
       )}
 
-      {/* Floating Bottom Info & Control Card */}
+      {/* Control Card */}
       <View style={styles.card}>
         <View style={styles.badgeRow}>
           <Text style={styles.badge}>SAFE-PATH ROUTING ACTIVE</Text>
@@ -226,6 +260,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    minWidth: 70,
   },
   searchButtonText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13 },
   webFallback: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
@@ -240,6 +275,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     alignItems: 'center',
     width: '100%',
+    maxWidth: 350,
   },
   routeTitle: { fontSize: 13, color: '#94A3B8' },
   routeName: { fontSize: 16, fontWeight: 'bold', color: '#60A5FA', marginTop: 4 },
