@@ -1,18 +1,47 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
-
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
-
-SplashScreen.preventAutoHideAsync();
+import { Tabs } from 'expo-router';
+import React from 'react';
+import { SymbolView } from 'expo-symbols';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: {
+          backgroundColor: '#1E293B',
+          borderTopColor: '#334155',
+        },
+        tabBarActiveTintColor: '#38BDF8',
+        tabBarInactiveTintColor: '#64748B',
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Safe-Path',
+          tabBarIcon: ({ color }) => (
+            <SymbolView name="shield.fill" tintColor={color} style={{ width: 24, height: 24 }} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: 'Punarmilan',
+          tabBarIcon: ({ color }) => (
+            <SymbolView name="person.2.fill" tintColor={color} style={{ width: 24, height: 24 }} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="docs"
+        options={{
+          title: 'Disaster Net',
+          tabBarIcon: ({ color }) => (
+            <SymbolView name="antenna.radiowaves.left.and.right" tintColor={color} style={{ width: 24, height: 24 }} />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
