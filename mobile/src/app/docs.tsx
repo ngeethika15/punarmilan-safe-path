@@ -8,59 +8,41 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-
-interface SOSRequest {
-  id: string;
-  location: string;
-  needs: string[];
-  urgency: 'HIGH' | 'CRITICAL' | 'MODERATE';
-  timestamp: string;
-}
-
-const INITIAL_SOS_LIST: SOSRequest[] = [
-  {
-    id: 'SOS-901',
-    location: 'Sector 4 Flood Plain (GPS: 12.971, 77.594)',
-    needs: ['Boat Rescue', 'Medical/Insulin'],
-    urgency: 'CRITICAL',
-    timestamp: '2 mins ago via Mesh Node #4',
-  },
-  {
-    id: 'SOS-902',
-    location: 'Kathmandu North Shelter B',
-    needs: ['Clean Drinking Water', 'Infant Formula'],
-    urgency: 'HIGH',
-    timestamp: '12 mins ago via Mesh Node #1',
-  },
-];
+import { useDisaster } from '../context/DisasterContext';
 
 export default function DisasterNetworkScreen() {
+  const { sosRequests, addSOSRequest } = useDisaster();
   const [activeTab, setActiveTab] = useState<'HEATMAP' | 'CHATBOT' | 'MESH'>('HEATMAP');
   
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string }>>([
     {
       sender: 'bot',
-      text: 'Hello. I am the offline Disaster Mental Health & Safety Assistant. How are you or your family feeling right now?',
+      text: 'Hello. I am the offline Disaster Mental Health & Safety Assistant. How are you feeling?',
     },
   ]);
 
   const handleSendMessage = () => {
     if (!chatInput.trim()) return;
-
     const userMsg = chatInput.trim();
-    const newMessages = [...chatMessages, { sender: 'user' as const, text: userMsg }];
-    setChatMessages(newMessages);
+    setChatMessages((prev) => [...prev, { sender: 'user', text: userMsg }]);
     setChatInput('');
 
     setTimeout(() => {
-      let botResponse = 'Thank you for sharing. Please stay in a safe, dry zone and remain near registered relief volunteers.';
+      let botResponse = 'Thank you for sharing. Please remain near registered relief volunteers.';
       const lower = userMsg.toLowerCase();
       
-      if (lower.includes('panic') || lower.includes('scared') || lower.includes('crying') || lower.includes('trauma')) {
-        botResponse = '⚠️ High Trauma Level Detected. Recommendation: Practice 4-7-8 deep breathing. A relief counselor at Camp A has been notified to visit your shelter block.';
+      if (lower.includes('panic') || lower.includes('scared') || lower.includes('trauma')) {
+        botResponse = '⚠️ High Trauma Level Detected. A relief counselor has been notified via local mesh.';
       } else if (lower.includes('food') || lower.includes('water') || lower.includes('rescue')) {
-        botResponse = 'ℹ️ If you need immediate physical rescue or supplies, please log an SOS packet using the P2P Mesh tab so rescue boats can locate your GPS coordinates.';
+        addSOSRequest({
+          id: `SOS-90${sosRequests.length + 1}`,
+          location: 'User Current GPS Bounds',
+          needs: ['Food/Water Supply', 'General Assistance'],
+          urgency: 'HIGH',
+          timestamp: 'Just now via Chat Bot',
+        });
+        botResponse = 'ℹ️ Urgent SOS alert created and broadcast to the shared heatmap!';
       }
 
       setChatMessages((prev) => [...prev, { sender: 'bot', text: botResponse }]);
@@ -75,29 +57,14 @@ export default function DisasterNetworkScreen() {
       </View>
 
       <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'HEATMAP' && styles.activeTab]}
-          onPress={() => setActiveTab('HEATMAP')}
-        >
-          <Text style={[styles.tabText, activeTab === 'HEATMAP' && styles.activeTabText]}>
-            🔥 SOS Heatmap
-          </Text>
+        <TouchableOpacity style={[styles.tab, activeTab === 'HEATMAP' && styles.activeTab]} onPress={() => setActiveTab('HEATMAP')}>
+          <Text style={[styles.tabText, activeTab === 'HEATMAP' && styles.activeTabText]}>🔥 SOS Heatmap ({sosRequests.length})</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'CHATBOT' && styles.activeTab]}
-          onPress={() => setActiveTab('CHATBOT')}
-        >
-          <Text style={[styles.tabText, activeTab === 'CHATBOT' && styles.activeTabText]}>
-            🧠 Mental Health Triage
-          </Text>
+        <TouchableOpacity style={[styles.tab, activeTab === 'CHATBOT' && styles.activeTab]} onPress={() => setActiveTab('CHATBOT')}>
+          <Text style={[styles.tabText, activeTab === 'CHATBOT' && styles.activeTabText]}>🧠 Mental Health Triage</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'MESH' && styles.activeTab]}
-          onPress={() => setActiveTab('MESH')}
-        >
-          <Text style={[styles.tabText, activeTab === 'MESH' && styles.activeTabText]}>
-            ⚡ Mesh Status
-          </Text>
+        <TouchableOpacity style={[styles.tab, activeTab === 'MESH' && styles.activeTab]} onPress={() => setActiveTab('MESH')}>
+          <Text style={[styles.tabText, activeTab === 'MESH' && styles.activeTabText]}>⚡ Mesh Status</Text>
         </TouchableOpacity>
       </View>
 
@@ -105,19 +72,14 @@ export default function DisasterNetworkScreen() {
         {activeTab === 'HEATMAP' && (
           <ScrollView>
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>📊 SOS Needs & Supply Heatmap</Text>
-              <Text style={styles.cardSub}>Aggregated offline supply requests logged across mesh nodes</Text>
+              <Text style={styles.cardTitle}>📊 Active SOS Needs & Supply Heatmap</Text>
+              <Text style={styles.cardSub}>Shared across modules in real time</Text>
 
-              {INITIAL_SOS_LIST.map((sos) => (
+              {sosRequests.map((sos) => (
                 <View key={sos.id} style={styles.sosCard}>
                   <View style={styles.sosHeader}>
                     <Text style={styles.sosId}>{sos.id}</Text>
-                    <Text
-                      style={[
-                        styles.badge,
-                        sos.urgency === 'CRITICAL' ? styles.badgeDanger : styles.badgeWarn,
-                      ]}
-                    >
+                    <Text style={[styles.badge, sos.urgency === 'CRITICAL' ? styles.badgeDanger : styles.badgeWarn]}>
                       {sos.urgency}
                     </Text>
                   </View>
@@ -134,27 +96,13 @@ export default function DisasterNetworkScreen() {
           <View style={styles.chatContainer}>
             <ScrollView style={styles.chatScroll}>
               {chatMessages.map((msg, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.chatBubble,
-                    msg.sender === 'user' ? styles.userBubble : styles.botBubble,
-                  ]}
-                >
-                  <Text style={msg.sender === 'user' ? styles.userText : styles.botText}>
-                    {msg.text}
-                  </Text>
+                <View key={index} style={[styles.chatBubble, msg.sender === 'user' ? styles.userBubble : styles.botBubble]}>
+                  <Text style={msg.sender === 'user' ? styles.userText : styles.botText}>{msg.text}</Text>
                 </View>
               ))}
             </ScrollView>
             <View style={styles.inputRow}>
-              <TextInput
-                style={styles.chatInput}
-                placeholder="Type your status or stress level..."
-                placeholderTextColor="#94A3B8"
-                value={chatInput}
-                onChangeText={setChatInput}
-              />
+              <TextInput style={styles.chatInput} placeholder="Type status or SOS request..." placeholderTextColor="#94A3B8" value={chatInput} onChangeText={setChatInput} />
               <TouchableOpacity style={styles.sendBtn} onPress={handleSendMessage}>
                 <Text style={styles.sendBtnText}>Send</Text>
               </TouchableOpacity>
@@ -165,27 +113,10 @@ export default function DisasterNetworkScreen() {
         {activeTab === 'MESH' && (
           <ScrollView>
             <View style={styles.card}>
-              <Text style={styles.cardTitle}>🔄 Peer-to-Peer Bluetooth/Wi-Fi Mesh Sync</Text>
-              <Text style={styles.cardSub}>Relays data node-to-node without cellular infrastructure</Text>
-
-              <View style={styles.meshMetric}>
-                <Text style={styles.meshLabel}>Active Mesh Neighbors Detected:</Text>
-                <Text style={styles.meshValue}>4 Nearby Devices (BLE Direct)</Text>
-              </View>
-              <View style={styles.meshMetric}>
-                <Text style={styles.meshLabel}>Offline Packets Queued:</Text>
-                <Text style={styles.meshValue}>14 Packets (Auto-sync when online)</Text>
-              </View>
-              <View style={styles.meshMetric}>
-                <Text style={styles.meshLabel}>Last Hop Broadcast:</Text>
-                <Text style={styles.meshValue}>Synced 45s ago with Node #3</Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.syncBtn}
-                onPress={() => Alert.alert('Mesh Sync', 'Broadcasting local survivor rosters and road tags to nearby peer devices...')}
-              >
-                <Text style={styles.syncBtnText}>📡 Force Mesh Broadcast Now</Text>
+              <Text style={styles.cardTitle}>🔄 Peer-to-Peer Bluetooth Mesh Sync</Text>
+              <Text style={styles.cardSub}>Relays shared state without cellular connection</Text>
+              <TouchableOpacity style={styles.syncBtn} onPress={() => Alert.alert('Mesh Broadcast', 'State synced across all active nodes.')}>
+                <Text style={styles.syncBtnText}>📡 Force Sync</Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -229,9 +160,6 @@ const styles = StyleSheet.create({
   chatInput: { flex: 1, backgroundColor: '#1E293B', borderRadius: 8, padding: 10, color: '#FFFFFF', fontSize: 13, marginRight: 8 },
   sendBtn: { backgroundColor: '#38BDF8', paddingVertical: 10, paddingHorizontal: 16, borderRadius: 8 },
   sendBtnText: { color: '#0F172A', fontWeight: 'bold', fontSize: 13 },
-  meshMetric: { paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  meshLabel: { fontSize: 12, color: '#64748B' },
-  meshValue: { fontSize: 13, fontWeight: 'bold', color: '#0F172A', marginTop: 2 },
   syncBtn: { backgroundColor: '#0284C7', paddingVertical: 12, borderRadius: 8, alignItems: 'center', marginTop: 14 },
   syncBtnText: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 13 },
 });
