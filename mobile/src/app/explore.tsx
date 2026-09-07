@@ -8,65 +8,18 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-
-interface Survivor {
-  id: string;
-  name: string;
-  age: string;
-  gender: string;
-  clothingColor: string;
-  distinguishingMarks: string;
-  campLocation: string;
-  contactNumber: string;
-  status: 'SAFE_IN_CAMP' | 'MEDICAL_ATTENTION' | 'UNIDENTIFIED';
-}
-
-const INITIAL_CAMP_SURVIVORS: Survivor[] = [
-  {
-    id: 'SURV-001',
-    name: 'Aarav Sharma',
-    age: '8',
-    gender: 'Male',
-    clothingColor: 'Red T-Shirt, Blue Shorts',
-    distinguishingMarks: 'Small scar on left cheek',
-    campLocation: 'Kathmandu Central Shelter Camp A',
-    contactNumber: '+977-9801234567',
-    status: 'SAFE_IN_CAMP',
-  },
-  {
-    id: 'SURV-002',
-    name: 'Unidentified Girl',
-    age: '5-6',
-    gender: 'Female',
-    clothingColor: 'Yellow Floral Frock',
-    distinguishingMarks: 'Silver bangles on right wrist',
-    campLocation: 'Sultanpur High School Relief Hub',
-    contactNumber: 'N/A (Registered by Volunteer)',
-    status: 'UNIDENTIFIED',
-  },
-  {
-    id: 'SURV-003',
-    name: 'Ramesh Kumar',
-    age: '45',
-    gender: 'Male',
-    clothingColor: 'Black Jacket, Grey Pants',
-    distinguishingMarks: 'Tattoo on right arm',
-    campLocation: 'Kathmandu Central Shelter Camp B',
-    contactNumber: '+977-9841122334',
-    status: 'MEDICAL_ATTENTION',
-  },
-];
+import { useDisaster } from '../context/DisasterContext';
 
 export default function PunarmilanScreen() {
+  const { survivors, addSurvivor } = useDisaster();
   const [activeTab, setActiveTab] = useState<'SEARCH' | 'REGISTER'>('SEARCH');
-  const [survivors, setSurvivors] = useState<Survivor[]>(INITIAL_CAMP_SURVIVORS);
 
-  // Search Filters (Multi-Attribute Survivor Matrix)
+  // Search Filters
   const [searchName, setSearchName] = useState('');
   const [searchClothing, setSearchClothing] = useState('');
   const [searchMarks, setSearchMarks] = useState('');
 
-  // Registration Form State
+  // Form State
   const [name, setName] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('Male');
@@ -81,7 +34,7 @@ export default function PunarmilanScreen() {
       return;
     }
 
-    const newSurvivor: Survivor = {
+    addSurvivor({
       id: `SURV-00${survivors.length + 1}`,
       name: name.trim() || 'Unidentified Person',
       age: age.trim() || 'Unknown',
@@ -91,12 +44,9 @@ export default function PunarmilanScreen() {
       campLocation,
       contactNumber: contactNumber.trim() || 'N/A',
       status: name.trim() ? 'SAFE_IN_CAMP' : 'UNIDENTIFIED',
-    };
+    });
 
-    setSurvivors([newSurvivor, ...survivors]);
-    Alert.alert('Success', 'Survivor successfully registered to local camp database!');
-    
-    // Reset Form
+    Alert.alert('Success', 'Survivor saved to unified global disaster store!');
     setName('');
     setAge('');
     setClothingColor('');
@@ -115,13 +65,11 @@ export default function PunarmilanScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>🤝 PUNARMILAN</Text>
         <Text style={styles.headerSubtitle}>Family Reunification & Offline Camp Rosters</Text>
       </View>
 
-      {/* Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'SEARCH' && styles.activeTab]}
@@ -144,7 +92,6 @@ export default function PunarmilanScreen() {
       <ScrollView style={styles.content}>
         {activeTab === 'SEARCH' ? (
           <View>
-            {/* Multi-Attribute Matrix Card */}
             <View style={styles.card}>
               <Text style={styles.cardTitle}>🎯 Multi-Attribute Survivor Search</Text>
               <Text style={styles.cardSub}>Search by clothing, scars, tattoos, or name</Text>
@@ -157,7 +104,7 @@ export default function PunarmilanScreen() {
               />
               <TextInput
                 style={styles.input}
-                placeholder="Clothing Color (e.g. Red T-Shirt, Frock)..."
+                placeholder="Clothing Color..."
                 value={searchClothing}
                 onChangeText={setSearchClothing}
               />
@@ -169,7 +116,6 @@ export default function PunarmilanScreen() {
               />
             </View>
 
-            {/* Results List */}
             <Text style={styles.sectionHeader}>
               Registered Survivors in Relief Camps ({filteredSurvivors.length})
             </Text>
@@ -187,72 +133,28 @@ export default function PunarmilanScreen() {
                     {item.status}
                   </Text>
                 </View>
-
-                <Text style={styles.survivorDetail}>
-                  👤 <Text style={styles.bold}>Age/Gender:</Text> {item.age} yrs | {item.gender}
-                </Text>
-                <Text style={styles.survivorDetail}>
-                  👕 <Text style={styles.bold}>Clothing:</Text> {item.clothingColor}
-                </Text>
-                <Text style={styles.survivorDetail}>
-                  🏷️ <Text style={styles.bold}>Marks/Jewelry:</Text> {item.distinguishingMarks}
-                </Text>
-                <Text style={styles.survivorDetail}>
-                  📍 <Text style={styles.bold}>Camp:</Text> {item.campLocation}
-                </Text>
-                <Text style={styles.survivorDetail}>
-                  📞 <Text style={styles.bold}>Contact:</Text> {item.contactNumber}
-                </Text>
+                <Text style={styles.survivorDetail}>👤 <Text style={styles.bold}>Age/Gender:</Text> {item.age} yrs | {item.gender}</Text>
+                <Text style={styles.survivorDetail}>👕 <Text style={styles.bold}>Clothing:</Text> {item.clothingColor}</Text>
+                <Text style={styles.survivorDetail}>🏷️ <Text style={styles.bold}>Marks/Jewelry:</Text> {item.distinguishingMarks}</Text>
+                <Text style={styles.survivorDetail}>📍 <Text style={styles.bold}>Camp:</Text> {item.campLocation}</Text>
+                <Text style={styles.survivorDetail}>📞 <Text style={styles.bold}>Contact:</Text> {item.contactNumber}</Text>
               </View>
             ))}
           </View>
         ) : (
-          /* Registration Form */
           <View style={styles.card}>
             <Text style={styles.cardTitle}>📝 Volunteer Camp Intake Form</Text>
-            <Text style={styles.cardSub}>Save details locally to enable offline reunification matching</Text>
+            <Text style={styles.cardSub}>Save details to update all connected modules instantly</Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Full Name (Leave blank if unidentified)"
-              value={name}
-              onChangeText={setName}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Approximate Age"
-              keyboardType="numeric"
-              value={age}
-              onChangeText={setAge}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Clothing Color & Description *"
-              value={clothingColor}
-              onChangeText={setClothingColor}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Distinguishing Marks (Scar, Tattoo, Jewelry)"
-              value={distinguishingMarks}
-              onChangeText={setDistinguishingMarks}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Relief Camp Location Name *"
-              value={campLocation}
-              onChangeText={setCampLocation}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Guardian / Volunteer Contact Number"
-              keyboardType="phone-pad"
-              value={contactNumber}
-              onChangeText={setContactNumber}
-            />
+            <TextInput style={styles.input} placeholder="Full Name" value={name} onChangeText={setName} />
+            <TextInput style={styles.input} placeholder="Approximate Age" keyboardType="numeric" value={age} onChangeText={setAge} />
+            <TextInput style={styles.input} placeholder="Clothing Description *" value={clothingColor} onChangeText={setClothingColor} />
+            <TextInput style={styles.input} placeholder="Distinguishing Marks" value={distinguishingMarks} onChangeText={setDistinguishingMarks} />
+            <TextInput style={styles.input} placeholder="Relief Camp Location *" value={campLocation} onChangeText={setCampLocation} />
+            <TextInput style={styles.input} placeholder="Contact Number" keyboardType="phone-pad" value={contactNumber} onChangeText={setContactNumber} />
 
             <TouchableOpacity style={styles.submitBtn} onPress={handleRegister}>
-              <Text style={styles.submitBtnText}>💾 Save to Offline Camp Roster</Text>
+              <Text style={styles.submitBtnText}>💾 Save to Unified Roster</Text>
             </TouchableOpacity>
           </View>
         )}
