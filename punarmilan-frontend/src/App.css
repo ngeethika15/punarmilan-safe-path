@@ -1,0 +1,636 @@
+/* =========================
+   GENERAL
+   ========================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7fb;
+}
+
+
+/* =========================
+   NAVIGATION BAR
+   ========================= */
+
+.navbar {
+  width: 100%;
+  background: #172554;
+  padding: 18px 30px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  box-sizing: border-box;
+}
+
+.navbar-title {
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 25px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.nav-links a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.nav-links a:hover {
+  text-decoration: underline;
+}
+
+
+/* =========================
+   HOME PAGE
+   ========================= */
+
+.home-page {
+  min-height: 100vh;
+  background: #f4f7fb;
+  padding: 50px 25px;
+}
+
+
+/* Hero section */
+
+.home-hero {
+  max-width: 950px;
+  margin: 0 auto 45px;
+  text-align: center;
+}
+
+.home-hero h1 {
+  font-size: 46px;
+  color: #172554;
+  margin-bottom: 15px;
+  line-height: 1.2;
+}
+
+.home-subtitle {
+  font-size: 21px;
+  color: #1f3c88;
+  font-weight: 600;
+  margin-bottom: 15px;
+}
+
+.home-description {
+  max-width: 750px;
+  margin: 0 auto;
+  color: #555;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+
+/* Home option cards */
+
+.home-options {
+  max-width: 1100px;
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+.home-card {
+  background: white;
+  padding: 30px 25px;
+  border-radius: 15px;
+  text-align: center;
+
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+
+  transition: transform 0.2s ease,
+              box-shadow 0.2s ease;
+}
+
+.home-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.home-icon {
+  font-size: 45px;
+  margin-bottom: 15px;
+}
+
+.home-card h2 {
+  color: #1f3c88;
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.home-card p {
+  color: #666;
+  line-height: 1.6;
+  min-height: 80px;
+}
+
+
+/* Home buttons */
+
+.home-button {
+  display: inline-block;
+  margin-top: 15px;
+
+  padding: 12px 20px;
+
+  background: #1f3c88;
+  color: white;
+
+  text-decoration: none;
+
+  border-radius: 8px;
+
+  font-weight: 600;
+}
+
+.home-button:hover {
+  background: #162d68;
+}
+
+
+/* About section */
+
+.home-info {
+  max-width: 900px;
+  margin: 50px auto 0;
+
+  background: white;
+
+  padding: 30px;
+
+  border-radius: 15px;
+
+  text-align: center;
+
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+}
+
+.home-info h2 {
+  color: #172554;
+  margin-bottom: 15px;
+}
+
+.home-info p {
+  color: #666;
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+
+/* =========================
+   REGISTRATION PAGE
+   ========================= */
+
+.registration-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: #f4f7fb;
+
+  padding: 30px;
+}
+
+
+/* Registration box */
+
+.registration-card {
+  width: 100%;
+  max-width: 550px;
+
+  background: white;
+
+  padding: 35px;
+
+  border-radius: 15px;
+
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+
+/* Heading */
+
+.registration-card h1 {
+  font-size: 42px;
+  color: #1e3a8a;
+
+  text-align: center;
+
+  margin-bottom: 10px;
+
+  line-height: 1.2;
+
+  font-weight: 700;
+}
+
+
+/* Subtitle */
+
+.subtitle {
+  text-align: center;
+  color: #666;
+
+  margin-bottom: 30px;
+}
+
+
+/* Each form field */
+
+.form-group {
+  margin-bottom: 22px;
+}
+
+
+/* Label */
+
+.form-group label {
+  display: block;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  margin-bottom: 10px;
+
+  color: #333;
+}
+
+
+/* Input boxes */
+
+.form-group input {
+  display: block;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 13px 15px;
+
+  font-size: 16px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 8px;
+
+  outline: none;
+}
+
+
+/* Input focus */
+
+.form-group input:focus {
+  border-color: #1f3c88;
+
+  box-shadow: 0 0 5px rgba(31, 60, 136, 0.2);
+}
+
+
+/* Dropdown and textarea */
+
+.form-group select,
+.form-group textarea {
+  display: block;
+
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 13px 15px;
+
+  font-size: 16px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 8px;
+
+  outline: none;
+
+  font-family: inherit;
+}
+
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #1f3c88;
+
+  box-shadow: 0 0 5px rgba(31, 60, 136, 0.2);
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+
+/* File input */
+
+.form-group input[type="file"] {
+  padding: 10px;
+
+  background: #f8f8f8;
+}
+
+
+/* Register button */
+
+.register-button {
+  width: 100%;
+
+  padding: 14px;
+
+  margin-top: 5px;
+
+  background: #1f3c88;
+
+  color: white;
+
+  border: none;
+
+  border-radius: 8px;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.register-button:hover {
+  background: #162d68;
+}
+
+
+/* =========================
+   MISSING PERSON SEARCH
+   ========================= */
+
+.search-page {
+  min-height: 100vh;
+
+  background: #f4f7fb;
+
+  padding: 40px 20px;
+}
+
+.search-container {
+  width: 100%;
+
+  max-width: 900px;
+
+  margin: 0 auto;
+}
+
+.search-container h1 {
+  font-size: 36px;
+
+  color: #1e3a8a;
+
+  text-align: center;
+
+  margin-bottom: 10px;
+
+  line-height: 1.2;
+
+  font-weight: 700;
+}
+
+.search-subtitle {
+  text-align: center;
+
+  color: #666;
+
+  margin-bottom: 30px;
+}
+
+
+/* Search area */
+
+.search-box {
+  display: flex;
+
+  gap: 12px;
+
+  margin-bottom: 20px;
+}
+
+.search-box input {
+  flex: 1;
+
+  padding: 14px 16px;
+
+  font-size: 16px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 8px;
+
+  outline: none;
+
+  box-sizing: border-box;
+}
+
+.search-box input:focus {
+  border-color: #1f3c88;
+}
+
+.search-button {
+  padding: 14px 25px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: #1f3c88;
+
+  color: white;
+
+  font-size: 16px;
+
+  cursor: pointer;
+}
+
+.search-button:hover {
+  background: #162d68;
+}
+
+
+/* Result count */
+
+.result-count {
+  color: #555;
+
+  margin-bottom: 20px;
+
+  font-weight: 600;
+}
+
+
+/* Person cards */
+
+.people-list {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+.person-card {
+  display: flex;
+
+  gap: 25px;
+
+  background: white;
+
+  padding: 25px;
+
+  border-radius: 12px;
+
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.person-photo {
+  width: 130px;
+
+  height: 150px;
+
+  background: #e8edf7;
+
+  border-radius: 10px;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 50px;
+
+  flex-shrink: 0;
+}
+
+.person-details {
+  flex: 1;
+}
+
+.person-details h2 {
+  margin-top: 0;
+
+  margin-bottom: 15px;
+
+  color: #1f3c88;
+}
+
+.person-details p {
+  margin: 8px 0;
+
+  color: #555;
+}
+
+
+/* No results */
+
+.no-results {
+  background: white;
+
+  padding: 40px;
+
+  text-align: center;
+
+  border-radius: 12px;
+}
+
+.no-results h2 {
+  color: #555;
+}
+
+
+/* =========================
+   MOBILE RESPONSIVE
+   ========================= */
+
+@media (max-width: 900px) {
+
+  .home-options {
+    grid-template-columns: 1fr;
+    max-width: 600px;
+  }
+
+  .home-card p {
+    min-height: auto;
+  }
+
+}
+
+
+@media (max-width: 700px) {
+
+  .navbar {
+    flex-direction: column;
+
+    gap: 15px;
+
+    text-align: center;
+  }
+
+  .nav-links {
+    flex-direction: column;
+
+    gap: 10px;
+  }
+
+  .home-hero h1 {
+    font-size: 34px;
+  }
+
+  .home-subtitle {
+    font-size: 18px;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .search-box {
+    flex-direction: column;
+  }
+
+  .search-button {
+    width: 100%;
+  }
+
+  .person-card {
+    flex-direction: column;
+  }
+
+  .person-photo {
+    width: 100%;
+  }
+
+  .registration-card {
+    padding: 25px 20px;
+  }
+
+  .registration-card h1 {
+    font-size: 32px;
+  }
+
+}
